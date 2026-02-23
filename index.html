@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RemoteStack — Work From Anywhere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #040810;
+      --surface: #0b1120;
+      --surface2: #101828;
+      --border: #1e2d45;
+      --accent: #00d4ff;
+      --accent2: #ff6b35;
+      --green: #00ff9d;
+      --text: #e8f0ff;
+      --muted: #5a7099;
+      --card-bg: rgba(16,24,40,0.85);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ---- GRID BACKGROUND ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ---- GLOW ORB ---- */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: rgba(0,212,255,0.08); top: -200px; right: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(255,107,53,0.07); bottom: 100px; left: -100px; }
+
+    /* ---- NAVBAR ---- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(4,8,16,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,255,157,0.08);
+      border: 1px solid rgba(0,255,157,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.72rem;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+    .pulse-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    /* ---- HERO ---- */
+    header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 100px 24px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 4px;
+      padding: 5px 14px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+
+    h1 .line2 {
+      display: block;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-desc {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-bottom: 60px;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stat-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; margin-top: 2px; }
+
+    /* ---- SECTION TITLE ---- */
+    .section-header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 0 24px 48px;
+    }
+    .section-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 10px;
+    }
+    .section-header p { color: var(--muted); font-size: 0.9rem; }
+
+    /* ---- JOB CARDS WRAPPER ---- */
+    .jobs-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 100px;
+    }
+
+    /* ---- JOB CARD ---- */
+    .job-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+    }
+    .job-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(0,212,255,0.35);
+      box-shadow: 0 20px 60px rgba(0,212,255,0.08);
+    }
+
+    .card-header {
+      padding: 24px 24px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-hot { background: rgba(255,107,53,0.12); color: var(--accent2); border: 1px solid rgba(255,107,53,0.2); }
+    .badge-new { background: rgba(0,255,157,0.1); color: var(--green); border: 1px solid rgba(0,255,157,0.2); }
+
+    .company-info { display: flex; align-items: center; gap: 14px; }
+    .company-logo {
+      width: 50px; height: 50px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+    .logo-a { background: linear-gradient(135deg, #0080ff, #00d4ff); color: #fff; }
+    .logo-b { background: linear-gradient(135deg, #ff4500, #ff9a3c); color: #fff; }
+
+    .company-meta h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .company-meta span { font-size: 0.75rem; color: var(--muted); }
+
+    /* ---- CARD BODY ---- */
+    .card-body { padding: 20px 24px; flex: 1; }
+
+    .job-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .tags {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+    }
+    .tag {
+      font-size: 0.68rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 4px 10px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .meta-list { display: flex; flex-direction: column; gap: 8px; }
+    .meta-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.8rem; color: var(--muted);
+    }
+    .meta-icon {
+      width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+
+    /* ---- CARD FOOTER ---- */
+    .card-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .salary {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .salary-label { font-size: 0.65rem; color: var(--muted); }
+
+    .apply-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(90deg, var(--accent), #0099cc);
+      color: #040810;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .apply-btn:hover { opacity: 0.88; transform: scale(1.03); }
+
+    .apply-btn-orange {
+      background: linear-gradient(90deg, var(--accent2), #e04800);
+      color: #fff;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    footer span { color: var(--accent); }
+
+    /* ---- ANIMATIONS ---- */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 0.7s forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.25s; }
+    .delay-3 { animation-delay: 0.4s; }
+    .delay-4 { animation-delay: 0.55s; }
+    .delay-5 { animation-delay: 0.7s; }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      .stats-row { gap: 28px; }
+      .jobs-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Remote<span>Stack</span></div>
+    <div class="nav-badge">
+      <div class="pulse-dot"></div>
+      2 OPENINGS LIVE
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header>
+    <div class="hero-tag fade-up delay-1">✦ Curated Remote Careers</div>
+    <h1 class="fade-up delay-2">
+      Your next job<br>
+      <span class="line2">is fully remote.</span>
+    </h1>
+    <p class="hero-desc fade-up delay-3">
+      Hand-picked remote opportunities from companies that truly embrace distributed work. No office. No commute. Just meaningful work from anywhere on Earth.
+    </p>
+    <div class="stats-row fade-up delay-4">
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Remote Roles</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Live Openings</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Office Days</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SECTION LABEL -->
+  <div class="section-header fade-up delay-4">
+    <h2>Featured Positions</h2>
+    <p>Apply directly — no recruiters, no fluff.</p>
+  </div>
+
+  <!-- JOB CARDS -->
+  <div class="jobs-grid">
+
+    <!-- JOB 1 -->
+    <div class="job-card fade-up delay-4">
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo logo-a">NX</div>
+          <div class="company-meta">
+            <h3>NX Remote Co.</h3>
+            <span>Series B · Global Team</span>
+          </div>
+        </div>
+        <span class="card-badge badge-hot">🔥 HOT</span>
+      </div>
+      <div class="card-body">
+        <div class="job-title">Remote Position #1</div>
+        <div class="tags">
+          <span class="tag">Remote</span>
+          <span class="tag">Full-Time</span>
+          <span class="tag">Worldwide</span>
+          <span class="tag">Async-Friendly</span>
+        </div>
+        <div class="meta-list">
+          <div class="meta-item"><div class="meta-icon">🌍</div> Anywhere in the World</div>
+          <div class="meta-item"><div class="meta-icon">⏰</div> Flexible Hours</div>
+          <div class="meta-item"><div class="meta-icon">📅</div> Posted Recently</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="salary">Competitive</div>
+          <div class="salary-label">+ equity & benefits</div>
+        </div>
+        <a class="apply-btn" href="https://nx2bs.com/c?o=501&a=205458" target="_blank" rel="noopener">
+          View & Apply →
+        </a>
+      </div>
+    </div>
+
+    <!-- JOB 2 -->
+    <div class="job-card fade-up delay-5">
+      <div class="card-header">
+        <div class="company-info">
+          <div class="company-logo logo-b">RW</div>
+          <div class="company-meta">
+            <h3>RemoteWorks HQ</h3>
+            <span>Bootstrapped · Fully Distributed</span>
+          </div>
+        </div>
+        <span class="card-badge badge-new">✦ NEW</span>
+      </div>
+      <div class="card-body">
+        <div class="job-title">Remote Position #2</div>
+        <div class="tags">
+          <span class="tag">Remote</span>
+          <span class="tag">Full-Time</span>
+          <span class="tag">High Pay</span>
+          <span class="tag">Equity</span>
+        </div>
+        <div class="meta-list">
+          <div class="meta-item"><div class="meta-icon">🌍</div> Anywhere in the World</div>
+          <div class="meta-item"><div class="meta-icon">⏰</div> Flexible Hours</div>
+          <div class="meta-item"><div class="meta-icon">📅</div> Posted Recently</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="salary">Competitive</div>
+          <div class="salary-label">+ equity & benefits</div>
+        </div>
+        <a class="apply-btn apply-btn-orange" href="https://nx2bs.com/c?o=50&a=205458" target="_blank" rel="noopener">
+          View & Apply →
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Built with ♥ by <span>RemoteStack</span> · Work from anywhere · Updated daily</p>
+  </footer>
+
+</body>
+</html>
